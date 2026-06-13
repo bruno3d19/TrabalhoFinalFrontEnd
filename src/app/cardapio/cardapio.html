@@ -1,0 +1,186 @@
+<main class="menu">
+  <header class="menu__topbar">
+    <button type="button" class="menu__back" aria-label="Voltar" (click)="goHome()">
+      <span class="menu__back-icon">←</span>
+      <span>Voltar</span>
+    </button>
+
+    <h1 class="menu__title">{{ isManagementView() ? 'Gerenciar Produtos' : 'Cardápio' }}</h1>
+
+    <div class="menu__actions">
+      <button
+        *ngIf="!isManagementView()"
+        type="button"
+        class="menu__profile"
+        aria-label="Meu perfil"
+        (click)="goToProfile()"
+      >
+        👤 Meu Perfil
+      </button>
+      <button
+        *ngIf="isManagementView()"
+        type="button"
+        class="menu__add-product"
+        (click)="openAddProductForm()"
+      >
+        + Adicionar Produto
+      </button>
+
+      <button
+        *ngIf="!isManagementView()"
+        type="button"
+        class="menu__cart-icon"
+        aria-label="Carrinho"
+        (click)="goToCheckout()"
+      >
+        <span class="menu__cart-glyph">🛒</span>
+        <span class="menu__cart-badge" *ngIf="cartCount > 0">{{ cartCount }}</span>
+      </button>
+    </div>
+  </header>
+
+  <section *ngIf="isManagementView()" class="manage-overview">
+    <div>
+      <h2>Cardápio Completo</h2>
+      <p>{{ filteredItems.length }} produtos cadastrados</p>
+    </div>
+  </section>
+
+  <section class="product-form" *ngIf="isManagementView() && showProductForm">
+    <h3>{{ productFormTitle() }}</h3>
+    <div class="product-form__grid">
+      <label>
+        Nome
+        <input type="text" [(ngModel)]="productForm.name" placeholder="Nome do produto" />
+      </label>
+      <label>
+        Categoria
+        <select [(ngModel)]="productForm.category">
+          <option *ngFor="let category of categories.slice(1)" [value]="category.id">{{ category.label }}</option>
+        </select>
+      </label>
+      <label class="is-full">
+        Descrição
+        <textarea
+          rows="3"
+          [(ngModel)]="productForm.description"
+          placeholder="Descreva o produto"
+        ></textarea>
+      </label>
+      <label class="is-full">
+        URL da imagem
+        <input type="text" [(ngModel)]="productForm.image" placeholder="https://..." />
+      </label>
+      <label>
+        Preço
+        <input type="number" min="0" step="0.01" [(ngModel)]="productForm.price" />
+      </label>
+    </div>
+    <div class="product-form__actions">
+      <button type="button" class="secondary-btn" (click)="cancelProductForm()">Cancelar</button>
+      <button type="button" class="primary-btn" (click)="submitProductForm()">Salvar</button>
+    </div>
+  </section>
+
+  <section class="filters" aria-label="Filtros de categoria">
+    <button
+      *ngFor="let category of categories; trackBy: trackByCategory"
+      type="button"
+      class="filters__button"
+      [class.is-active]="activeCategory === category.id"
+      (click)="setCategory(category.id)"
+    >
+      {{ category.label }}
+    </button>
+  </section>
+
+  <section class="products" aria-label="Lista de produtos">
+    <article class="product-card" *ngFor="let item of filteredItems; trackBy: trackByProduct">
+      <img class="product-card__image" [src]="item.image" [alt]="item.name" />
+      <div class="product-card__body">
+        <h2 class="product-card__title">{{ item.name }}</h2>
+        <span *ngIf="isManagementView()" class="product-card__category-chip">
+          {{ categoryLabelMap[item.category] }}
+        </span>
+        <p class="product-card__description">{{ item.description }}</p>
+        <div class="product-card__footer">
+          <strong class="product-card__price">{{
+            item.price | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+          }}</strong>
+          <span *ngIf="!item.available" class="product-card__status">Indisponível</span>
+          <button
+            *ngIf="!isManagementView()"
+            type="button"
+            class="product-card__add"
+            [disabled]="!item.available"
+            (click)="addToCart(item)"
+          >
+            + Adicionar
+          </button>
+        </div>
+        <div *ngIf="isManagementView()" class="product-card__manage-actions">
+          <button type="button" class="secondary-btn" (click)="editProduct(item)">Editar</button>
+          <button
+            type="button"
+            class="secondary-btn"
+            [class.warn-btn]="item.available"
+            (click)="toggleAvailability(item.id)"
+          >
+            {{ productActionLabel(item) }}
+          </button>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="cart" aria-label="Itens selecionados" *ngIf="!isManagementView() && cart.length">
+    <div class="cart__header">
+      <h3>🛒 Seu Carrinho ({{ cartCount }} item{{ cartCount > 1 ? 's' : '' }})</h3>
+    </div>
+
+    <ul class="cart__list">
+      <li class="cart__item" *ngFor="let cartItem of cart; trackBy: trackByCartItem">
+        <img
+          class="cart__item-image"
+          [src]="cartItem.item.image"
+          [alt]="cartItem.item.name"
+        />
+
+        <div class="cart__item-info">
+          <strong>{{ cartItem.item.name }}</strong>
+          <span class="cart__item-price">{{
+            cartItem.item.price * cartItem.quantity | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+          }}</span>
+        </div>
+
+        <div class="cart__actions">
+          <button type="button" (click)="decreaseQuantity(cartItem.item.id)">−</button>
+          <span>{{ cartItem.quantity }}</span>
+          <button type="button" (click)="increaseQuantity(cartItem.item.id)">+</button>
+          <button
+            type="button"
+            class="cart__remove"
+            aria-label="Remover item"
+            title="Remover item"
+            (click)="removeFromCart(cartItem.item.id)"
+          >
+            🗑
+          </button>
+        </div>
+      </li>
+    </ul>
+
+    <div class="cart__footer">
+      <strong class="cart__total-label">Total</strong>
+      <strong class="cart__total-value">{{
+        totalPrice | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+      }}</strong>
+    </div>
+
+    <div class="cart__finish-wrap">
+      <button type="button" class="cart__finish" (click)="finalizeOrder()">
+        Finalizar Pedido
+      </button>
+    </div>
+  </section>
+</main>

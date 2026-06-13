@@ -1,0 +1,117 @@
+<div class="container">
+
+  <div class="header">
+
+    <button (click)="goBack()">
+      Voltar
+    </button>
+
+    <div>
+      <h1>Análise de Clientes</h1>
+      <p>Segmentação, recorrência e valor dos clientes</p>
+    </div>
+
+  </div>
+
+  <div class="cards">
+
+    <div class="card">
+      <h3>Total Clientes</h3>
+      <span>{{ customersData().length }}</span>
+    </div>
+
+    <div class="card">
+      <h3>VIP</h3>
+      <span>{{ vipCustomers().length }}</span>
+    </div>
+
+    <div class="card">
+      <h3>Recorrentes</h3>
+      <span>{{ recurringCustomers().length }}</span>
+    </div>
+
+    <div class="card">
+      <h3>Novos</h3>
+      <span>{{ newCustomers().length }}</span>
+    </div>
+
+  </div>
+
+  <div class="search">
+
+    <input
+      type="text"
+      placeholder="Buscar cliente..."
+      [ngModel]="searchTerm()"
+      (ngModelChange)="searchTerm.set($event)"
+    >
+
+  </div>
+
+  <div class="tabs">
+
+    <button (click)="changeTab('all')">
+      Todos
+    </button>
+
+    <button (click)="changeTab('vip')">
+      VIP
+    </button>
+
+    <button (click)="changeTab('recurring')">
+      Recorrentes
+    </button>
+
+    <button (click)="changeTab('new')">
+      Novos
+    </button>
+
+  </div>
+
+  <div class="customers">
+
+    @for(customer of getCustomersByTab(); track customer.customerId){
+
+      <div class="customer-card">
+
+        <h3>
+          {{ customer.customerName }}
+
+          @if(customer.isVip){
+            <span class="vip">VIP</span>
+          }
+
+        </h3>
+
+        <p>{{ customer.customerId }}</p>
+
+        <div class="grid">
+
+          <div>
+            <strong>Pedidos</strong>
+            <p>{{ customer.totalOrders }}</p>
+          </div>
+
+          <div>
+            <strong>Total</strong>
+            <p>
+              R$ {{ customer.totalSpent | number:'1.2-2' }}
+            </p>
+          </div>
+
+          <div>
+            <strong>Ticket Médio</strong>
+            <p>
+              R$ {{ customer.avgTicket | number:'1.2-2' }}
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    }
+
+  </div>
+
+</div>

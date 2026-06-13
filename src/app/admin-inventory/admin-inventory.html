@@ -1,0 +1,155 @@
+<div class="min-h-screen">
+  <!-- Header -->
+  <div class="header-bar">
+    <div class="header-inner">
+      <div class="header-left">
+        <button class="btn-ghost" (click)="goBack()">←</button>
+        <div>
+          <h1 class="page-title">Gestão de Estoque</h1>
+          <p class="page-subtitle">Controle de inventário e alertas de estoque baixo</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <!-- Métricas -->
+    <div class="metrics-grid mb-6">
+      <div class="card">
+        <div class="card-body">
+          <div class="metric-item">
+            <div class="metric-icon bg-blue-light">📦</div>
+            <div>
+              <p class="metric-label">Total de Produtos</p>
+              <p class="metric-value">{{ totalProducts }}</p>
+              <p class="metric-hint">{{ productsInStock }} em estoque</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="metric-item">
+            <div class="metric-icon bg-green-light">📈</div>
+            <div>
+              <p class="metric-label">Valor do Inventário</p>
+              <p class="metric-value">R$ {{ totalInventoryValue.toFixed(2) }}</p>
+              <p class="metric-hint">Custo total</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="metric-item">
+            <div class="metric-icon bg-red-light">⚠️</div>
+            <div>
+              <p class="metric-label">Estoque Baixo</p>
+              <p class="metric-value alert-count">{{ lowStockProducts.length }}</p>
+              <p class="metric-hint">Produtos precisam reposição</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alertas de Estoque Baixo -->
+    <div class="card card-danger mb-6" *ngIf="lowStockProducts.length > 0">
+      <div class="card-header">
+        <h2 class="card-title text-red">⚠️ Alertas de Estoque Baixo</h2>
+      </div>
+      <div class="card-body">
+        <div class="low-stock-list">
+          <div class="low-stock-item" *ngFor="let product of lowStockProducts">
+            <div class="product-info">
+              <div class="product-emoji">{{ product.emoji }}</div>
+              <div>
+                <p class="product-name">{{ product.name }}</p>
+                <p class="product-stock-hint">Estoque atual: {{ product.stock }} unidades</p>
+              </div>
+            </div>
+            <button class="btn btn-orange" (click)="quickRestock(product.id)">
+              Repor Estoque
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabela de Produtos -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Inventário Completo</h2>
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input
+            class="search-input"
+            placeholder="Buscar produto..."
+            [(ngModel)]="searchTerm"
+          />
+        </div>
+      </div>
+      <div class="card-body no-padding">
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Categoria</th>
+                <th>Estoque</th>
+                <th>Status</th>
+                <th>Custo Unit.</th>
+                <th>Valor Total</th>
+                <th class="text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let product of filteredProducts">
+                <td>
+                  <div class="product-cell">
+                    <div class="product-thumb">{{ product.emoji }}</div>
+                    <div>
+                      <p class="product-name-cell">{{ product.name }}</p>
+                      <p class="product-min">Mín: {{ product.lowStockThreshold || '—' }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td>{{ product.category }}</td>
+                <td><strong>{{ product.stock }}</strong> unidades</td>
+                <td>
+                  <span class="badge" [class]="getStatusClass(product)">
+                    {{ getStatusLabel(product) }}
+                  </span>
+                </td>
+                <td>R$ {{ product.cost.toFixed(2) }}</td>
+                <td>R$ {{ (product.stock * product.cost).toFixed(2) }}</td>
+                <td class="text-right">
+                  <!-- Adjusting mode -->
+                  <div class="adjust-row" *ngIf="adjustingId === product.id; else actionBtns">
+                    <input
+                      type="number"
+                      class="qty-input"
+                      [(ngModel)]="stockChange"
+                    />
+                    <button class="btn btn-sm btn-outline" (click)="saveAdjustment(product.id)">Salvar</button>
+                    <button class="btn btn-sm btn-ghost" (click)="cancelAdjust()">Cancelar</button>
+                  </div>
+                  <!-- Default actions -->
+                  <ng-template #actionBtns>
+                    <div class="action-row">
+                      <button class="btn-icon" (click)="adjustStock(product.id, -1)">−</button>
+                      <button class="btn-icon" (click)="adjustStock(product.id, 1)">+</button>
+                      <button class="btn btn-sm btn-ghost" (click)="startAdjust(product.id)">Ajustar</button>
+                    </div>
+                  </ng-template>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

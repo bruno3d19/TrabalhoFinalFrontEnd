@@ -1,0 +1,239 @@
+<div class="min-h-screen bg-gray-50">
+  <!-- Header -->
+  <div class="header-bar">
+    <div class="header-inner">
+      <div class="header-left">
+        <button class="btn-ghost" (click)="goBack()">
+          <span class="icon">←</span>
+        </button>
+        <div>
+          <h1 class="page-title">Dashboard de Gestão</h1>
+          <p class="page-subtitle">Análise completa do seu negócio</p>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="date-filter">
+          <span class="filter-icon">⊟</span>
+          <div class="tabs">
+            <button
+              class="tab-btn"
+              [class.active]="dateRange === 'today'"
+              (click)="setDateRange('today')"
+            >Hoje</button>
+            <button
+              class="tab-btn"
+              [class.active]="dateRange === 'week'"
+              (click)="setDateRange('week')"
+            >Semana</button>
+            <button
+              class="tab-btn"
+              [class.active]="dateRange === 'month'"
+              (click)="setDateRange('month')"
+            >Mês</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <!-- Alertas -->
+    <div class="alerts-container" *ngIf="alerts.length > 0">
+      <div
+        class="alert-banner"
+        *ngFor="let alert of alerts"
+        [class]="'alert-banner alert-' + alert.type"
+      >
+        <strong>{{ alert.title }}</strong>
+        <span>{{ alert.description }}</span>
+      </div>
+    </div>
+
+    <!-- Resumo Financeiro -->
+    <div class="card mb-6">
+      <div class="card-header">
+        <h2 class="card-title">Resumo Financeiro</h2>
+      </div>
+      <div class="card-body">
+        <div class="financial-grid">
+          <!-- Receita -->
+          <div class="financial-item">
+            <div class="financial-label">
+              <span class="icon-green">💰</span>
+              <p class="label-text">Receita Bruta</p>
+            </div>
+            <p class="value-green">R$ {{ totalRevenue.toFixed(2) }}</p>
+            <p class="value-hint">Soma de todos os {{ totalOrders }} pedidos concluídos</p>
+          </div>
+
+          <!-- Custos -->
+          <div class="financial-item">
+            <div class="financial-label">
+              <span class="icon-red">📉</span>
+              <p class="label-text">Custos Estimados</p>
+            </div>
+            <p class="value-red">R$ {{ (totalRevenue * 0.7).toFixed(2) }}</p>
+            <p class="value-hint">~70% da receita (ingredientes, taxas, delivery)</p>
+          </div>
+
+          <!-- Lucro -->
+          <div class="financial-item">
+            <div class="financial-label">
+              <span class="icon-blue">📈</span>
+              <p class="label-text">Lucro Líquido</p>
+            </div>
+            <p class="value-blue">R$ {{ netProfit.toFixed(2) }}</p>
+            <p class="value-hint">Margem de {{ profitMargin.toFixed(1) }}% sobre a receita</p>
+          </div>
+        </div>
+
+        <!-- Cálculo Visual -->
+        <div class="calc-bar">
+          <p class="calc-formula">
+            <span class="text-green">R$ {{ totalRevenue.toFixed(2) }}</span>
+            &nbsp;-&nbsp;
+            <span class="text-red">R$ {{ (totalRevenue * 0.7).toFixed(2) }}</span>
+            &nbsp;=&nbsp;
+            <span class="text-blue">R$ {{ netProfit.toFixed(2) }}</span>
+          </p>
+          <p class="calc-hint">Receita Bruta - Custos = Lucro Líquido</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPIs Secundários -->
+    <div class="kpi-grid mb-6">
+      <div class="card">
+        <div class="card-body">
+          <div class="kpi-item">
+            <div class="kpi-icon bg-orange">🛒</div>
+            <div>
+              <p class="kpi-label">Total de Pedidos</p>
+              <p class="kpi-value">{{ totalOrders }}</p>
+              <p class="kpi-growth" *ngIf="ordersGrowth !== 0" [class.positive]="ordersGrowth > 0" [class.negative]="ordersGrowth < 0">
+                {{ ordersGrowth > 0 ? '↑' : '↓' }} {{ absValue(ordersGrowth).toFixed(1) }}% vs período anterior
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="kpi-item">
+            <div class="kpi-icon bg-purple">🧾</div>
+            <div>
+              <p class="kpi-label">Ticket Médio</p>
+              <p class="kpi-value">R$ {{ avgTicket.toFixed(2) }}</p>
+              <p class="kpi-hint">R$ {{ totalRevenue.toFixed(0) }} ÷ {{ totalOrders }} pedidos</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="kpi-item">
+            <div class="kpi-icon bg-blue">👥</div>
+            <div>
+              <p class="kpi-label">Clientes</p>
+              <p class="kpi-value">{{ customersCount }}</p>
+              <p class="kpi-hint">{{ vipCount }} VIP • {{ recurringCount }} recorrentes</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navegação Rápida -->
+    <div class="nav-grid mb-6">
+      <div class="card nav-card" (click)="navigate('/admin/produtos')">
+        <div class="card-body">
+          <div class="nav-item">
+            <div class="nav-icon bg-blue-light">📦</div>
+            <div>
+              <h3 class="nav-title">Análise de Produtos</h3>
+              <p class="nav-desc">Mais vendidos, lucrativos e performance</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card nav-card" (click)="navigate('/admin/pedidos')">
+        <div class="card-body">
+          <div class="nav-item">
+            <div class="nav-icon bg-green-light">📊</div>
+            <div>
+              <h3 class="nav-title">Análise de Pedidos</h3>
+              <p class="nav-desc">Horários de pico e dias com mais vendas</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="card nav-card" (click)="navigate('/admin/estoque')">
+        <div class="card-body">
+          <div class="nav-item">
+            <div class="nav-icon bg-orange-light">🏭</div>
+            <div>
+              <h3 class="nav-title">Gestão de Estoque</h3>
+              <p class="nav-desc">Controle de inventário e alertas</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráfico de Tendência -->
+    <div class="card mb-6">
+      <div class="card-header">
+        <h2 class="card-title">Evolução de Vendas (Últimos 30 dias)</h2>
+      </div>
+      <div class="card-body">
+        <div class="chart-placeholder">
+          <div class="chart-bars">
+            <div
+              class="chart-bar"
+              *ngFor="let item of historicalData | slice:0:15"
+              [style.height.%]="getBarHeight(item.revenue)"
+              [title]="'R$ ' + item.revenue.toFixed(2)"
+            ></div>
+          </div>
+          <p class="chart-label">Receita diária — últimos 30 dias</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top 3 Produtos -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Produtos Mais Vendidos</h2>
+      </div>
+      <div class="card-body">
+        <div class="top-products-grid">
+          <div
+            class="top-product"
+            *ngFor="let product of topSellingProducts | slice:0:3; let i = index"
+          >
+            <div class="product-rank-row">
+              <div class="rank-badge" [class]="'rank-' + i">{{ i + 1 }}</div>
+              <p class="product-name">{{ product.productName }}</p>
+            </div>
+            <div class="product-stats">
+              <div class="product-stat">
+                <span class="stat-label">Vendidos:</span>
+                <span class="stat-value">{{ product.quantitySold }} un</span>
+              </div>
+              <div class="product-stat">
+                <span class="stat-label">Receita:</span>
+                <span class="stat-value text-green">R$ {{ product.revenue.toFixed(2) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,182 @@
+<div class="min-h-screen">
+  <!-- Header -->
+  <div class="header-bar">
+    <div class="header-inner">
+      <button class="btn-ghost" (click)="goBack()">←</button>
+      <div>
+        <h1 class="page-title">Análise de Pedidos</h1>
+        <p class="page-subtitle">Horários de pico, dias com mais vendas e performance</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <!-- Estatísticas Gerais -->
+    <div class="stats-grid mb-6">
+      <div class="card">
+        <div class="card-body">
+          <div class="stat-row">
+            <div>
+              <p class="stat-label">Entregues</p>
+              <p class="stat-value text-green">{{ deliveredOrders }}</p>
+            </div>
+            <span class="stat-icon">✅</span>
+          </div>
+          <p class="stat-hint">{{ deliveredPct }}% do total</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="stat-row">
+            <div>
+              <p class="stat-label">Em Preparo</p>
+              <p class="stat-value text-blue">{{ preparingOrders }}</p>
+            </div>
+            <span class="stat-icon">🕐</span>
+          </div>
+          <p class="stat-hint">Sendo preparados agora</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="stat-row">
+            <div>
+              <p class="stat-label">Tempo Médio</p>
+              <p class="stat-value text-purple">{{ avgPreparationTime }}min</p>
+            </div>
+            <span class="stat-icon">📈</span>
+          </div>
+          <p class="stat-hint">Tempo de preparo médio</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="stat-row">
+            <div>
+              <p class="stat-label">Pendentes</p>
+              <p class="stat-value text-amber">{{ pendingOrders }}</p>
+            </div>
+            <span class="stat-icon">📅</span>
+          </div>
+          <p class="stat-hint">Aguardando aceitação</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pedidos por Dia da Semana -->
+    <div class="charts-row mb-6">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Pedidos por Dia da Semana</h2>
+        </div>
+        <div class="card-body">
+          <div class="bar-chart">
+            <div class="bar-group" *ngFor="let day of ordersByDay">
+              <div class="bars">
+                <div
+                  class="bar bar-blue"
+                  [style.height.px]="scaleBar(day.orders, maxDayOrders, 160)"
+                  [title]="day.orders + ' pedidos'"
+                ></div>
+                <div
+                  class="bar bar-green"
+                  [style.height.px]="scaleBar(day.revenue, maxDayRevenue, 160)"
+                  [title]="'R$ ' + day.revenue.toFixed(0)"
+                ></div>
+              </div>
+              <span class="bar-label">{{ day.day }}</span>
+            </div>
+          </div>
+          <div class="chart-legend">
+            <span class="legend-dot dot-blue"></span><span>Pedidos</span>
+            <span class="legend-dot dot-green"></span><span>Receita</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Horários de Pico -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Horários de Pico</h2>
+        </div>
+        <div class="card-body">
+          <div class="line-chart">
+            <div
+              class="line-point"
+              *ngFor="let h of peakHours"
+              [style.bottom.px]="scaleBar(h.orders, maxHourOrders, 140)"
+              [title]="h.hour + ':00 — ' + h.orders + ' pedidos'"
+            >
+              <div class="dot"></div>
+            </div>
+          </div>
+          <div class="hour-labels">
+            <span *ngFor="let h of peakHours">{{ h.hour }}h</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Horários Recomendados & Maior Demanda -->
+    <div class="charts-row mb-6">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Horários Recomendados para Promoções</h2>
+        </div>
+        <div class="card-body">
+          <div class="insights-list" *ngIf="lowDemandHours.length > 0; else noLow">
+            <div class="insight-item" *ngFor="let h of lowDemandHours">
+              <div>
+                <p class="insight-hour">{{ h.hour }}:00</p>
+                <p class="insight-hint">Baixo movimento ({{ h.orders }} pedidos)</p>
+              </div>
+              <span class="badge badge-amber">Oportunidade</span>
+            </div>
+          </div>
+          <ng-template #noLow>
+            <p class="empty-state">Todos os horários têm bom movimento!</p>
+          </ng-template>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Horários de Maior Demanda</h2>
+        </div>
+        <div class="card-body">
+          <div class="insights-list">
+            <div class="insight-item" *ngFor="let h of topHours; let i = index">
+              <div class="insight-rank-row">
+                <div class="rank-badge" [class]="'rank-' + i">{{ i + 1 }}</div>
+                <div>
+                  <p class="insight-hour">{{ h.hour }}:00</p>
+                  <p class="insight-hint">{{ h.orders }} pedidos</p>
+                </div>
+              </div>
+              <span class="badge badge-green">Pico</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Distribuição por Status -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Distribuição por Status</h2>
+      </div>
+      <div class="card-body">
+        <div class="status-grid">
+          <div class="status-item" *ngFor="let s of statusData">
+            <p class="status-value" [class]="'text-' + s.color">{{ s.count }}</p>
+            <p class="status-label">{{ s.label }}</p>
+            <p class="status-pct">{{ getPct(s.count) }}%</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

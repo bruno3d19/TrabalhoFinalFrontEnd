@@ -1,0 +1,245 @@
+<div class="min-h-screen">
+  <!-- Header -->
+  <div class="header-bar">
+    <div class="header-inner">
+      <button class="btn-ghost" (click)="goBack()">←</button>
+      <div>
+        <h1 class="page-title">Análise de Produtos</h1>
+        <p class="page-subtitle">Performance detalhada de cada produto</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-content">
+    <!-- KPIs -->
+    <div class="kpi-grid mb-6">
+      <div class="card">
+        <div class="card-body">
+          <div class="kpi-row">
+            <div>
+              <p class="kpi-label">Total de Produtos</p>
+              <p class="kpi-value">{{ productAnalytics.length }}</p>
+            </div>
+            <span class="kpi-icon">📦</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="kpi-row">
+            <div>
+              <p class="kpi-label">Unidades Vendidas</p>
+              <p class="kpi-value">{{ totalUnitsSold }}</p>
+            </div>
+            <span class="kpi-icon">🛒</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="kpi-row">
+            <div>
+              <p class="kpi-label">Receita Total</p>
+              <p class="kpi-value">R$ {{ totalRevenue.toFixed(2) }}</p>
+            </div>
+            <span class="kpi-icon">💵</span>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="kpi-row">
+            <div>
+              <p class="kpi-label">Baixa Performance</p>
+              <p class="kpi-value text-amber">{{ lowPerformingProducts.length }}</p>
+            </div>
+            <span class="kpi-icon">⚠️</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-bar mb-6">
+      <button class="tab-btn" [class.active]="activeTab === 'overview'"       (click)="activeTab = 'overview'">Visão Geral</button>
+      <button class="tab-btn" [class.active]="activeTab === 'top-selling'"    (click)="activeTab = 'top-selling'">Mais Vendidos</button>
+      <button class="tab-btn" [class.active]="activeTab === 'most-profitable'"(click)="activeTab = 'most-profitable'">Mais Lucrativos</button>
+      <button class="tab-btn" [class.active]="activeTab === 'low-performing'" (click)="activeTab = 'low-performing'">Baixa Performance</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <ng-container *ngIf="activeTab === 'overview'">
+      <!-- Bar chart -->
+      <div class="charts-row mb-6">
+        <div class="card">
+          <div class="card-header"><h2 class="card-title">Vendas por Produto</h2></div>
+          <div class="card-body">
+            <div class="h-bar-chart">
+              <div class="h-bar-row" *ngFor="let p of productAnalytics | slice:0:6">
+                <p class="h-bar-name">{{ p.productName }}</p>
+                <div class="h-bar-track">
+                  <div class="h-bar-fill" [style.width.%]="getBarPct(p.quantitySold)"></div>
+                </div>
+                <span class="h-bar-val">{{ p.quantitySold }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category donut-style -->
+        <div class="card">
+          <div class="card-header"><h2 class="card-title">Vendas por Categoria</h2></div>
+          <div class="card-body">
+            <div class="category-list">
+              <div class="category-row" *ngFor="let cat of categoryData; let i = index">
+                <div class="cat-dot" [style.background]="chartColors[i % chartColors.length]"></div>
+                <p class="cat-name">{{ cat.name }}</p>
+                <div class="cat-track">
+                  <div class="cat-fill" [style.width.%]="getCatPct(cat.value)" [style.background]="chartColors[i % chartColors.length]"></div>
+                </div>
+                <span class="cat-val">{{ getCatPct(cat.value) }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full Table -->
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Todos os Produtos</h2></div>
+        <div class="card-body no-padding">
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th class="text-right">Vendidos</th>
+                  <th class="text-right">Visualizações</th>
+                  <th class="text-right">Conversão</th>
+                  <th class="text-right">Receita</th>
+                  <th class="text-right">Lucro</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let p of productAnalytics">
+                  <td>{{ p.productName }}</td>
+                  <td class="text-right">{{ p.quantitySold }}</td>
+                  <td class="text-right">👁 {{ p.views }}</td>
+                  <td class="text-right">
+                    <span class="badge" [class]="p.conversionRate > 10 ? 'badge-blue' : 'badge-gray'">
+                      {{ p.conversionRate.toFixed(1) }}%
+                    </span>
+                  </td>
+                  <td class="text-right text-green">R$ {{ p.revenue.toFixed(2) }}</td>
+                  <td class="text-right text-blue">R$ {{ p.profit.toFixed(2) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- TOP SELLING -->
+    <ng-container *ngIf="activeTab === 'top-selling'">
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Top Produtos Mais Vendidos</h2></div>
+        <div class="card-body">
+          <div class="top-list">
+            <div class="top-item" *ngFor="let p of topSellingProducts; let i = index">
+              <div class="top-header">
+                <div class="top-left">
+                  <div class="rank-badge" [class]="'rank-' + i">{{ i + 1 }}</div>
+                  <div>
+                    <h3 class="top-name">{{ p.productName }}</h3>
+                    <p class="top-hint">{{ p.quantitySold }} unidades vendidas</p>
+                  </div>
+                </div>
+                <div class="top-right">
+                  <p class="top-revenue">R$ {{ p.revenue.toFixed(2) }}</p>
+                  <p class="top-profit-hint">Lucro: R$ {{ p.profit.toFixed(2) }}</p>
+                </div>
+              </div>
+              <div class="progress-row">
+                <div>
+                  <p class="progress-label">Taxa de Conversão</p>
+                  <div class="progress-track">
+                    <div class="progress-fill" [style.width.%]="p.conversionRate"></div>
+                  </div>
+                </div>
+                <div class="views-col">
+                  <p class="progress-label">Visualizações</p>
+                  <p class="views-count">👁 {{ p.views }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- MOST PROFITABLE -->
+    <ng-container *ngIf="activeTab === 'most-profitable'">
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Produtos Mais Lucrativos</h2></div>
+        <div class="card-body">
+          <div class="profitable-list">
+            <div class="profitable-item" *ngFor="let p of mostProfitableProducts; let i = index">
+              <div class="profitable-left">
+                <div class="rank-badge rank-green">{{ i + 1 }}</div>
+                <div>
+                  <p class="profitable-name">{{ p.productName }}</p>
+                  <p class="profitable-hint">{{ p.quantitySold }} vendidos • R$ {{ p.revenue.toFixed(2) }} receita</p>
+                </div>
+              </div>
+              <div class="profitable-right">
+                <p class="profitable-profit">📈 R$ {{ p.profit.toFixed(2) }}</p>
+                <p class="profitable-margin">Margem: {{ getMargin(p) }}%</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- LOW PERFORMING -->
+    <ng-container *ngIf="activeTab === 'low-performing'">
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">Produtos com Baixa Performance</h2></div>
+        <div class="card-body">
+          <div *ngIf="lowPerformingProducts.length === 0" class="empty-state">
+            <p>📦</p>
+            <p>Nenhum produto com baixa performance no momento</p>
+          </div>
+          <div class="low-list" *ngIf="lowPerformingProducts.length > 0">
+            <div class="low-item" *ngFor="let p of lowPerformingProducts">
+              <div class="low-header">
+                <span>⚠️</span>
+                <h3 class="low-name">{{ p.productName }}</h3>
+              </div>
+              <div class="low-stats">
+                <div>
+                  <p class="low-stat-label">Vendidos</p>
+                  <p class="low-stat-val">{{ p.quantitySold }} unidades</p>
+                </div>
+                <div>
+                  <p class="low-stat-label">Taxa de Conversão</p>
+                  <p class="low-stat-val text-amber">{{ p.conversionRate.toFixed(1) }}%</p>
+                </div>
+              </div>
+              <div class="suggestions-box">
+                <p class="suggestions-title">Sugestões de Melhoria:</p>
+                <ul class="suggestions-list">
+                  <li>• Melhorar a foto do produto</li>
+                  <li>• Revisar preço (atualmente gerando pouca receita)</li>
+                  <li>• Adicionar promoção ou combo</li>
+                  <li>• Considerar retirar do cardápio se não melhorar</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
